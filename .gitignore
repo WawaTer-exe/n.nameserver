@@ -1,0 +1,26 @@
+# =========================================================================
+# n.NameServers GitHub Exclusion Rules
+# =========================================================================
+
+# --- Compilation and Output Artifacts ---
+bin/
+obj/
+publish/
+
+# --- IDE and Workspace Settings ---
+.vs/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+
+# --- Local Storage & Dynamic Database Assets ---
+# Prevents uploading individual user accounts, clothes saves, 
+# and custom MakerPen room files onto your public GitHub repository page.
+NameServerStorage/
+content/
+
+# --- System & Diagnostic Logging ---
+*.log
+.DS_Store
+Thumbs.db
