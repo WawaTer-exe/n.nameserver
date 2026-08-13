@@ -62,6 +62,8 @@ var unlockedWardrobeItems = new[] {
 // --- GLOBAL MEMORY STACKS FOR SOCIAL MATRICES ---
 var ActiveSessions = new Dictionary<string, int>(); 
 var ActiveParties = new Dictionary<int, List<int>>(); 
+var BannedPlatforms = new HashSet<string>(); // <-- ADD THIS EXACT LINE
+
 
 // --- HELPER CLASSES FOR SYSTEM RE-SERIALIZATION ---
 public class AccountProfile {
