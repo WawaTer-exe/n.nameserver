@@ -602,9 +602,8 @@ _ = Task.Run(async () => {
                 }
                 catch (Exception ex) { Console.WriteLine($"[ADMIN ERROR] Failed to update user save file: {ex.Message}"); }
             }
+                        }
             else Console.WriteLine($"[ADMIN ERROR] Username '@{targetUser}' not found.");
-        }
-            }
         }
     }
 });
