@@ -1,0 +1,59 @@
+=========================================================================
+          n.NameServers MASTER OPERATIONAL DEPLOYMENT GUIDE             
+=========================================================================
+
+STEP 1: INITIALIZE AND SYNC REPOSITORY TO GITHUB
+-------------------------------------------------------------------------
+1. Open a Command Prompt or Terminal window inside your server project folder.
+2. Compile the scripts to confirm a flawless build pass:
+   dotnet build
+3. Run these commands step-by-step to push your code directly to GitHub:
+   git init
+   git add RecRoomServer.csproj Program.cs .gitignore README.md instructions.txt
+   git commit -m "Initial commit: complete open-source multi-auth cloud private server engine"
+   git branch -M main
+   git remote add origin https://github.com
+   git push -u origin main --force
+
+
+STEP 2: REDIRECTING YOUR 2020 IL2CPP GAME CLIENT FILE
+-------------------------------------------------------------------------
+1. Download and install a free hexadecimal binary file editor like HxD.
+2. Open your 2020 Rec Room game files folder and find this exact file path:
+   RecRoom_Data / il2cpp_data / Metadata / global-metadata.dat
+3. Drag and drop 'global-metadata.dat' directly into the HxD interface screen.
+4. Press Ctrl+F, click the 'Text-string' tab, and search for: https://rec.net
+   (If it does not show up, perform a text search for: https://rec.net)
+5. Overwrite that exact text block by typing your local address: http://localhost:20592
+6. CRITICAL METADATA RULE: Your server address is shorter than the old URL string.
+   NEVER use Backspace or Delete to remove the extra old leftover letters! Doing 
+   so breaks the binary pointer lookups, causing an instant game crash.
+7. Instead, click the remaining old trailing letters and change their corresponding 
+   hex bytes on the left side of the screen directly to '00' (Null bytes) until the 
+   leftover old characters vanish completely. Click File -> Save.
+
+
+STEP 3: ENABLING INTERNET MULTIPLAYER ACCESS FOR YOUR FRIENDS
+-------------------------------------------------------------------------
+1. To play with friends over the internet, open your web browser, log into your 
+   home Wi-Fi router settings panel, and navigate to the Port Forwarding tab.
+2. Add a new port forwarding rule:
+   - Forwarding Port: 20592
+   - Protocol Type: TCP Only
+   - Target Destination IP: Your host computer's IPv4 local network address 
+     (Found by typing 'ipconfig' into your computer's command prompt).
+3. When you share the game folder with your friends, have them follow STEP 2 above,
+   but tell them to replace 'localhost' with your real public internet IP address 
+   instead (e.g., http://YOUR_PUBLIC_IP:20592).
+
+
+STEP 4: BOOTING UP THE MULTIPLAYER PRIVATE NETWORK
+-------------------------------------------------------------------------
+1. Make sure your official Steam desktop app is running logged into your account 
+   in the background before launching the game to let the client bypass its internal 
+   dll verification loops safely.
+2. Open a terminal inside your server folder and type:
+   dotnet run
+3. Keep the terminal running! Launch your patched 'RecRoom.exe' game file and have 
+   your friends join you online inside your custom 20 CCU cloud servers!
+=========================================================================
