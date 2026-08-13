@@ -476,4 +476,94 @@ Console.WriteLine("====================================================");
 
 app.Run();
 ```
-  
+ // =========================================================================
+// 🎛️ MODULAR CONSOLE ADMIN PANEL INTERCEPTOR (ADD TO BOTTOM OF PROGRAM.CS)
+// =========================================================================
+_ = Task.Run(async () => {
+    // 2-second boot buffer to allow the main Kestrel logger to print first
+    await Task.Delay(2000); 
+
+    while (true)
+    {
+        string? input = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(input)) continue;
+
+        var parts = input.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        string cmd = parts[0].ToLower();
+
+        if (cmd == "help")
+        {
+            Console.WriteLine("\n[n.NameServers ADMIN INTERFACE COMMANDS]");
+            Console.WriteLine("  list                  - Lists every registered profile signature saved on disk.");
+            Console.WriteLine("  givecreds <name> <val>- Directly updates a specific player's token currency wallet balance.");
+            Console.WriteLine("  setlevel <name> <lvl> - Modifies player XP parameters and increments Watch leveling display.");
+            Console.WriteLine("  devflag <name> <t/f>  - Toggles the developer/moderator permissions tags on player watches.");
+        }
+        else if (cmd == "list")
+        {
+            // Scans the active save storage layer profiles
+            foreach (var file in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "NameServerStorage", "Profiles"), "*.json"))
+            {
+                try {
+                    using var doc = JsonDocument.Parse(File.ReadAllText(file));
+                    var root = doc.RootElement;
+                    Console.WriteLine($"  ID: {root.GetProperty("Id")} | @{root.GetProperty("Username")} | Tokens: {root.GetProperty("Credits")} | Lvl: {root.GetProperty("Level")}");
+                } catch { /* Suppress corrupt structural reads */ }
+            }
+        }
+        else if ((cmd == "givecreds" || cmd == "setlevel" || cmd == "devflag") && parts.Length >= 3)
+        {
+            string targetUser = parts[1];
+            string valueInput = parts[2];
+            string profilesPath = Path.Combine(AppContext.BaseDirectory, "NameServerStorage", "Profiles");
+
+            string? targetFile = Directory.GetFiles(profilesPath, "*.json")
+                .FirstOrDefault(f => {
+                    try {
+                        using var doc = JsonDocument.Parse(File.ReadAllText(f));
+                        return doc.RootElement.GetProperty("Username").GetString()?.Equals(targetUser, StringComparison.OrdinalIgnoreCase) ?? false;
+                    } catch { return false; }
+                });
+
+            if (targetFile != null)
+            {
+                try
+                {
+                    // Dynamically read, manipulate string tokens, and override the json file layout
+                    var rawJson = File.ReadAllText(targetFile);
+                    var jsonDict = JsonSerializer.Deserialize<Dictionary<string, object>>(rawJson);
+
+                    if (jsonDict != null)
+                    {
+                        if (cmd == "givecreds" && int.TryParse(valueInput, out int amt))
+                        {
+                            long currentCredits = jsonDict.ContainsKey("Credits") ? Convert.ToInt64(jsonDict["Credits"].ToString()) : 0;
+                            jsonDict["Credits"] = currentCredits + amt;
+                            Console.WriteLine($"[ADMIN SUCCESS] Modified currency cache mapping balance for @{targetUser}.");
+                        }
+                        else if (cmd == "setlevel" && int.TryParse(valueInput, out int lvl))
+                        {
+                            jsonDict["Level"] = lvl;
+                            jsonDict["XP"] = lvl * 2000;
+                            Console.WriteLine($"[ADMIN SUCCESS] Set watch level badge profile display for @{targetUser} to: Lvl {lvl}");
+                        }
+                        else if (cmd == "devflag" && bool.TryParse(valueInput, out bool dev))
+                        {
+                            jsonDict["Developer"] = dev;
+                            Console.WriteLine($"[ADMIN SUCCESS] Developer authorization permission token status for @{targetUser} set to: {dev}");
+                        }
+
+                        File.WriteAllText(targetFile, JsonSerializer.Serialize(jsonDict));
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine($"[ADMIN ERROR] Failed to manipulate profile schema attributes: {ex.Message}"); }
+            }
+            else Console.WriteLine($"[ADMIN ERROR] Target coach username '@{targetUser}' could not be located in database folder trees.");
+        }
+    }
+});
+
+Console.WriteLine("====================================================");
+Console.WriteLine("ADMIN PANEL ENGINE: Terminal Command Interceptor Thread Active.");
+Console.WriteLine("====================================================");
+ 
