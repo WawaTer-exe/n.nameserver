@@ -1,0 +1,17 @@
+# =========================================================================
+# SYSTEM EXECUTION INSTRUCTIONS
+# =========================================================================
+
+# 1. Step completely inside your source codes directory tree folder
+cd src/n.NameServers
+
+# 2. Compile and launch your high-performance multiplayer engine node
+dotnet run
+
+# [LEAVE THIS TERMINAL RUNNING WHILE YOU PLAY]
+# 3. Open HxD Hex Editor on your machine.
+# 4. Open file: RecRoom_Data/il2cpp_data/Metadata/global-metadata.dat
+# 5. Hex-patch the domain "https://rec.net" over to read "http://localhost:20592".
+# 6. Clear out old leftover characters with 00 Null Bytes. Save it.
+# 7. Make sure your desktop Steam application is running in the background.
+# 8. Fire up 'RecRoom.exe' and drop straight into your custom cloud network server!
