@@ -154,6 +154,25 @@ app.MapGet("/api/config/v2", () => Results.Json(new Dictionary<string, object>
     { "App.Gifting.Enabled", false },
     { "App.Store.Enabled", true }
 }));
+// --- SYSTEM TRAFFIC MONITOR MIDDLEWARE ---
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] {context.Request.Method} -> {context.Request.Path}");
+    
+    // Extract session signature to actively catch blacklisted machines
+    string authHeader = context.Request.Headers["Authorization"].ToString();
+    string platformId = authHeader.Replace("Bearer jwt-token-", "").Trim();
+
+    if (BannedPlatforms.Contains(platformId))
+    {
+        Console.WriteLine($"[SECURITY REJECTION] Disconnected request from banned hardware footprint: {platformId}");
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsync("Banned from n.NameServers");
+        return;
+    }
+
+    await next.Invoke();
+});
 
 app.MapGet("/api/config/v1/amplitude", () => Results.Json(new { ApiKey = "nameservers-mock-key" }));
 app.MapGet("/api/versioncheck/v3", () => Results.Json(new { Valid = true, Message = "n.NameServers Checked Successfully" }));
