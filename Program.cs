@@ -473,14 +473,11 @@ Console.WriteLine("====================================================");
 Console.WriteLine("REPOSITORY RUNNING: n.NameServers Social Matrix Active");
 Console.WriteLine("SYSTEM CODES: Friend Matrices & Party Invites Fully Functional");
 Console.WriteLine("====================================================");
-
-app.Run();
-```
- // =========================================================================
-// 🎛️ MODULAR CONSOLE ADMIN PANEL INTERCEPTOR (ADD TO BOTTOM OF PROGRAM.CS)
+// =========================================================================
+// 🎛️ COMPLETE INTERACTIVE CONSOLE ADMIN PANEL (above?();)
 // =========================================================================
 _ = Task.Run(async () => {
-    // 2-second boot buffer to allow the main Kestrel logger to print first
+    // 2-second boot buffer to let the server print its launch logs first
     await Task.Delay(2000); 
 
     while (true)
@@ -489,6 +486,8 @@ _ = Task.Run(async () => {
         if (string.IsNullOrWhiteSpace(input)) continue;
 
         var parts = input.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) continue;
+        
         string cmd = parts[0].ToLower();
 
         if (cmd == "help")
@@ -498,24 +497,58 @@ _ = Task.Run(async () => {
             Console.WriteLine("  givecreds <name> <val>- Directly updates a specific player's token currency wallet balance.");
             Console.WriteLine("  setlevel <name> <lvl> - Modifies player XP parameters and increments Watch leveling display.");
             Console.WriteLine("  devflag <name> <t/f>  - Toggles the developer/moderator permissions tags on player watches.");
+            Console.WriteLine("  broadcast <message>   - Sends a global text notification alert to all active player watches.");
+            Console.WriteLine("  ban <username>        - Ban-locks an account and terminates device authorization.");
+            Console.WriteLine("  unban <username>      - Removes ban restrictions from a specific username.");
+            Console.WriteLine("  shutdown              - Safely disconnects the server routes and closes the application.");
         }
         else if (cmd == "list")
         {
-            // Scans the active save storage layer profiles
-            foreach (var file in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "NameServerStorage", "Profiles"), "*.json"))
+            string profilesPath = Path.Combine(AppContext.BaseDirectory, "NameServerStorage", "Profiles");
+            if (!Directory.Exists(profilesPath))
+            {
+                Console.WriteLine("[ADMIN INFO] No player profiles folder found yet. Run the game to generate accounts.");
+                continue;
+            }
+            foreach (var file in Directory.GetFiles(profilesPath, "*.json"))
             {
                 try {
                     using var doc = JsonDocument.Parse(File.ReadAllText(file));
                     var root = doc.RootElement;
                     Console.WriteLine($"  ID: {root.GetProperty("Id")} | @{root.GetProperty("Username")} | Tokens: {root.GetProperty("Credits")} | Lvl: {root.GetProperty("Level")}");
-                } catch { /* Suppress corrupt structural reads */ }
+                } catch { }
             }
         }
-        else if ((cmd == "givecreds" || cmd == "setlevel" || cmd == "devflag") && parts.Length >= 3)
+        else if (cmd == "broadcast" && parts.Length >= 2)
+        {
+            string globalMessage = string.Join(" ", parts.Skip(1));
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"\n[BROADCAST] Sending server-wide alert: \"{globalMessage}\"");
+            Console.ResetColor();
+
+            // Overrides the client version check endpoint so the message flashes onto player watches
+            app.MapGet("/api/versioncheck/v3", () => Results.Json(new { 
+                Valid = true, 
+                Message = $"ALERT: {globalMessage}" 
+            }));
+        }
+        else if (cmd == "shutdown")
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n====================================================");
+            Console.WriteLine("[SHUTDOWN] Closing server routes and stopping port 20592 cleanly...");
+            Console.WriteLine("====================================================");
+            Console.ResetColor();
+            await Task.Delay(1000);
+            Environment.Exit(0);
+        }
+        else if ((cmd == "givecreds" || cmd == "setlevel" || cmd == "devflag" || cmd == "ban" || cmd == "unban") && parts.Length >= 2)
         {
             string targetUser = parts[1];
-            string valueInput = parts[2];
+            string valueInput = parts.Length >= 3 ? parts[2] : "";
             string profilesPath = Path.Combine(AppContext.BaseDirectory, "NameServerStorage", "Profiles");
+
+            if (!Directory.Exists(profilesPath)) { Console.WriteLine("[ADMIN ERROR] No data profiles folder found."); continue; }
 
             string? targetFile = Directory.GetFiles(profilesPath, "*.json")
                 .FirstOrDefault(f => {
@@ -529,7 +562,6 @@ _ = Task.Run(async () => {
             {
                 try
                 {
-                    // Dynamically read, manipulate string tokens, and override the json file layout
                     var rawJson = File.ReadAllText(targetFile);
                     var jsonDict = JsonSerializer.Deserialize<Dictionary<string, object>>(rawJson);
 
@@ -539,31 +571,41 @@ _ = Task.Run(async () => {
                         {
                             long currentCredits = jsonDict.ContainsKey("Credits") ? Convert.ToInt64(jsonDict["Credits"].ToString()) : 0;
                             jsonDict["Credits"] = currentCredits + amt;
-                            Console.WriteLine($"[ADMIN SUCCESS] Modified currency cache mapping balance for @{targetUser}.");
+                            Console.WriteLine($"[ADMIN SUCCESS] Granted {amt} tokens to @{targetUser}.");
                         }
                         else if (cmd == "setlevel" && int.TryParse(valueInput, out int lvl))
                         {
                             jsonDict["Level"] = lvl;
                             jsonDict["XP"] = lvl * 2000;
-                            Console.WriteLine($"[ADMIN SUCCESS] Set watch level badge profile display for @{targetUser} to: Lvl {lvl}");
+                            Console.WriteLine($"[ADMIN SUCCESS] Updated level for @{targetUser} to: Lvl {lvl}");
                         }
                         else if (cmd == "devflag" && bool.TryParse(valueInput, out bool dev))
                         {
                             jsonDict["Developer"] = dev;
-                            Console.WriteLine($"[ADMIN SUCCESS] Developer authorization permission token status for @{targetUser} set to: {dev}");
+                            Console.WriteLine($"[ADMIN SUCCESS] Set developer flag for @{targetUser} to: {dev}");
+                        }
+                        else if (cmd == "ban")
+                        {
+                            string platformId = jsonDict.ContainsKey("AssociatedPlatformId") ? jsonDict["AssociatedPlatformId"].ToString() ?? "" : "";
+                            if (!string.IsNullOrWhiteSpace(platformId)) BannedPlatforms.Add(platformId);
+                            Console.WriteLine($"[ADMIN SUCCESS] Blacklisted device footprint for @{targetUser}.");
+                        }
+                        else if (cmd == "unban")
+                        {
+                            string platformId = jsonDict.ContainsKey("AssociatedPlatformId") ? jsonDict["AssociatedPlatformId"].ToString() ?? "" : "";
+                            if (!string.IsNullOrWhiteSpace(platformId)) BannedPlatforms.Remove(platformId);
+                            Console.WriteLine($"[ADMIN SUCCESS] Lifted ban blocks from @{targetUser}.");
                         }
 
                         File.WriteAllText(targetFile, JsonSerializer.Serialize(jsonDict));
                     }
                 }
-                catch (Exception ex) { Console.WriteLine($"[ADMIN ERROR] Failed to manipulate profile schema attributes: {ex.Message}"); }
+                catch (Exception ex) { Console.WriteLine($"[ADMIN ERROR] Failed to update user save file: {ex.Message}"); }
             }
-            else Console.WriteLine($"[ADMIN ERROR] Target coach username '@{targetUser}' could not be located in database folder trees.");
+            else Console.WriteLine($"[ADMIN ERROR] Username '@{targetUser}' not found.");
         }
-    }
-});
+app.Run();
+```
 
-Console.WriteLine("====================================================");
-Console.WriteLine("ADMIN PANEL ENGINE: Terminal Command Interceptor Thread Active.");
-Console.WriteLine("====================================================");
+
  
