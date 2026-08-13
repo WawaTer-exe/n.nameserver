@@ -1,0 +1,23 @@
+n.NameServers Open-Source Protection License
+Copyright (c) 2026 n.NameServers Contributors
+
+This software is provided as an open-source restoration project. Permission is hereby 
+granted to run, modify, and host this software under the following explicit conditions:
+
+1. ATTRIBUTION: Any distribution, fork, or copy of this codebase (in whole or in part) 
+   MUST retain the original copyright notice, the name "n.NameServers", and direct 
+   attribution to the original repository. You may not claim this work as your own.
+
+2. SHARE-ALIKE: If you modify, extend, or build upon this software, your modified 
+   versions MUST be released under this exact same open-source protection license. 
+   You cannot privatize, restrict, or lock down modified versions of this engine.
+
+3. NON-COMMERCIAL: This software is built strictly for preservation and educational 
+   purposes. You may not sell, rent, or commercialize this software or its binaries.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+DEALINGS IN THE SOFTWARE.
