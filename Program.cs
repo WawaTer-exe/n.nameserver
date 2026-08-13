@@ -604,8 +604,13 @@ _ = Task.Run(async () => {
             }
             else Console.WriteLine($"[ADMIN ERROR] Username '@{targetUser}' not found.");
         }
+            }
+        }
+    }
+});
+
 app.Run();
-```
+
 
 
  
